@@ -1,0 +1,79 @@
+---
+title: "Module 1 Homework"
+author: "Yanhe Wen"
+date: "1/14/2017"
+output: pdf_document
+---
+
+##Question 1
+###(a)
+```{r}
+vec <- c(5,TRUE)
+class(vec)
+```
+
+###(b)
+```{r}
+x <- 1:4
+y <- 1:2
+x+y
+```
+
+###(c)
+```{r}
+fsin<-function(x) sin(pi*x)
+fsin(1)
+```
+**So the number 0 is returned.**
+
+###(d)
+```{r}
+c(1,2) %*% t(c(1,2))
+```
+**So it returns A two by two matrix**
+
+###(e)
+```{r}
+f <- function(x) {
+  g <- function(y) {
+    y+z
+  }
+  z <- 4
+  x + g(x)
+}
+z <- 15
+f(3)
+```
+
+##Question 2
+```{r}
+fs <- function(x) x^2
+sum(fs(1:1000))
+```
+
+##Question 3
+###(a)
+```{r}
+k <- c(1:20)
+X <- 2*k
+print(X)
+```
+
+###(b)
+```{r}
+Y <- rep(0,20)
+print(Y)
+```
+
+###(c)
+```{r}
+integrand <- function(x) sqrt(x)
+for (i in 1:20) {
+  if (i < 12) {
+    Y[i] = 3*k[i]
+  }else {
+    Y[i] = integrate(integrand, lower = 0, upper = k[i])$value
+  }
+}
+print(Y)
+```

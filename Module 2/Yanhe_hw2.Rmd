@@ -1,0 +1,103 @@
+---
+title: "Module 2 Homework"
+author: "Yanhe Wen"
+date: "1/18/2017"
+output: pdf_document
+---
+
+##Question 1
+```{r results='hide', message=FALSE }
+source("http://www.bioconductor.org/biocLite.R")
+biocLite()
+library(multtest)
+data("golub")
+```
+
+###(a)
+```{r}
+gol.fac <- factor(golub.cl, levels=0:1, labels = c("ALL","AML"))
+meanALL <- apply(golub[,gol.fac=="ALL"], 1, mean)
+```
+###(b)
+```{r}
+meanAML <- apply(golub[,gol.fac=="AML"], 1, mean)
+```
+###(c)
+```{r}
+sortedALL <- order(abs(meanALL), decreasing = TRUE)
+print(golub.gnames[sortedALL[1:3],2])
+```
+###(d)
+```{r}
+sortedAML <- order(abs(meanAML), decreasing = TRUE)
+print(golub.gnames[sortedAML[1:3],2])
+```
+
+##Question 2
+###(a)
+```{r}
+AML5 <- golub[1:5, gol.fac=="AML"]
+write.csv(AML5, file = "AML5.csv")
+```
+###(b)
+```{r}
+ALL5 <- golub[1:5, gol.fac=="ALL"]
+write.csv(ALL5, file = "ALL5.txt")
+```
+###(c)
+```{r}
+dataC <- golub[100:200, 1]
+print(sd(dataC))
+```
+###(d)
+```{r}
+sdAllPatient <- apply(golub, 1, sd)
+print(sum(sdAllPatient>1))
+```
+###(e)
+```{r}
+g101 <- golub[101,]
+g102 <- golub[102,]
+gname101 <- golub.gnames[101,2]
+gname102 <- golub.gnames[102,2]
+plot(g101, g102, xlab = gname101, ylab = gname102)
+```
+
+##Question 3
+```{r results='hide', message=FALSE}
+library(ALL)
+data("ALL")
+str(ALL)
+```
+
+###(a)
+```{r}
+ALLB1 <- exprs(ALL[,ALL$BT=="B1"])
+hist(ALLB1)
+```
+
+###(b)
+```{r}
+meanB1 <- apply(ALLB1, 1, mean)
+```
+
+###(c)
+```{r}
+sortedMeanB1 <- order(abs(meanB1), decreasing = TRUE)
+print(meanB1[sortedMeanB1[1:3]])
+```
+
+
+##Question 4
+###(a)
+```{r}
+data("trees")
+print(typeof(trees))
+```
+
+###(b)
+```{r}
+plot(trees$Girth,trees$Height, col = "blue", type = "o", pch = "+", xlab = "Girth", ylab= "Height&Valume", ylim = range(1:100), xlim = range(1:30) )
+lines(trees$Girth, trees$Volume, col = "red", type = "o")
+legend("bottomright", c("Height", "Valume"), col = c("blue", "red"), lty = c(1,1))
+```
