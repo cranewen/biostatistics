@@ -1,0 +1,124 @@
+---
+title: "Module 3 Homework"
+author: "Yanhe Wen"
+date: "1/24/2017"
+output: pdf_document
+---
+
+##Question 1
+choose (b) $\int_1^{4} 2e^{-2(x-1)}~dx$
+
+##Question 2
+```{r}
+fx <- function(x) 2^x/factorial(x)*exp(-2)
+px1 <- fx(1)
+cat("P(X=1) is: ", px1)
+```
+
+```{r}
+px2 <- fx(0) + fx(1) + fx(2) + fx(3)
+cat("P(-2<X<4) is: ", px2)
+```
+
+##Question 3
+\(n=3, p=0.25\)
+
+##Question 4
+```{r}
+vec4.range <- c(0,1,2)
+cat("P(Y<=2) is: ",sum(dbinom(vec4.range, 3, 0.25)))
+Ex4 <- sum(vec4.range*dbinom(vec4.range, 3, 0.25))
+cat("E(X) is: ",Ex4)
+Var4 <- sum((vec4.range-Ex4)^2*dbinom(vec4.range, 3, 0.25))
+cat("Var(Y) is: ",Var4)
+```
+
+##Question 5
+```{r}
+fx5 <- function(x) dchisq(x,3)
+
+px5 <- integrate(fx5, lower = 1, upper = 4)$value
+cat("P(1<X<4) is ", px5)
+Ex5 <- integrate(function(x) x*fx5(x), lower = 1, upper = 4)$value
+cat("E(X) is ", Ex5)
+Var5 <- integrate(function(x) (x-Ex5)^2*fx5(x), lower = 1, upper = 4)$value
+cat("Var(X) is: ", Var5)
+```
+
+Monte Carlo Simulation with 100000 samples
+```{r}
+mcData5 <- rchisq(100000, 3)
+sum <- 0
+for(i in 1:100000){
+  if(1<mcData5[i]&&mcData5[i]<4) {
+    sum = sum + 1
+  }
+}
+pm5 <- sum/100000
+print(pm5)
+```
+Yes, it agrees the answer above.
+
+##Question 6
+\(E(Y) = 4*E(X) + 10 = 30\)\newline
+\(Var(Y) = 4^2*10 = 160\)\newline
+It doesn't follow m = 10
+
+##Question 7
+###(a)
+```{r}
+p7a <- pnorm(1.6, 1.6, 0.4) - pnorm(1, 1.6, 0.4)
+cat("P(1<X<1.6) is: ", p7a)
+```
+###(b)
+```{r}
+nsim7 <- 500000
+mcData7 <- rnorm(nsim7, 1.6, 0.4)
+sum7 <- 0
+for (i in 1:500000){
+  if(1<=mcData7[i]&&mcData7[i]<=1.6){
+    sum7 = sum7 + 1
+  }
+}
+p7b <- sum7/nsim7
+cat("The probability is: ", p7b)
+```
+###(c)
+```{r}
+p7c <- dbinom(2, 5, p7a)
+cat("The exact probablity of 2 out of 5 in values between 1 and 1.6 is: ", p7c)
+```
+
+##Question 8
+###(a)
+```{r}
+nsim8 <- 10000000
+X <- rf(nsim8, 2, 5)
+meanX <- mean(X)
+varX <- var(X)
+Y <- rf(nsim8, 10, 5)
+meanY <- mean(Y)
+varY <- var(Y)
+
+```
+###(b)
+Using formula, we get the results showed below:
+```{r}
+meanXformula <- 5/(5-2)
+cat("X mean is: ", meanXformula)
+varXformula <- 2*5^2*(5+2-2)/(2*(5-2)^2*(5-4))
+cat("X variance is: ", varXformula)
+meanYformula <- 5/(5-2)
+cat("Y mean is: ", meanYformula)
+varYformula <- 2*5^2*(5+10-2)/(10*(5-2)^2*(5-4))
+cat("Y variance is: " , varYformula)
+```
+###(c)
+After running the code from (a), we get:
+```{r}
+cat("X mean is: ", meanX)
+cat("X variance is: ", varX)
+cat("Y mean is: ", meanY)
+cat("Y variance is: ", varY)
+```
+The results are very closed to each other, so the results from (a) agree with the results from (b)
