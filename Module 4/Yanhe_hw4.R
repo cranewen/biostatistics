@@ -1,0 +1,59 @@
+#Question 1
+#(a)
+#Simulate 10000 samples for vector(X1,X2,X3,X4,X5)
+data1 <- matrix(rnorm(10000*5, mean = 5, sd = 3), nrow = 10000)
+Ex1 <- mean(data1)
+sd1 <- sd(data1)
+#(b)
+count<-0
+for(i in 1:length(data1)){
+  if(data1[i]>2&data1[i]<5.1){
+    count = count + 1
+  }
+}
+p <- count/length(data1)
+
+pnorm(5.1, mean = 5, sd = 3) - pnorm(2, mean = 5, sd = 3)
+# they are equal, so we can find P(2<X<5.1)
+
+#Question 2
+#Should use CLT
+#mean = np, var=np*(1-p)
+meanX2 <- 20*0.7
+sdX2 <- sqrt(20*0.7*(1-0.7))
+p2 <- 1 - pnorm(15, meanX2, sdX2)
+
+#Question 3
+require(mvtnorm)
+nsim3 <- 1000
+XmeanData <- rep(NA, nsim3)
+for(i in 1:nsim3){ 
+  data3 <- rmvnorm(50, mean = c(9,10), sigma = matrix(c(3,2,2,5), nrow = 2))
+  meanX <- apply(data3, 1, mean)
+  meanY <- apply(data3, 2, mean)
+  XmeanData[i] <- (meanX + 0.5 < meanY)
+}
+p3 <- mean(XmeanData)
+S <- mean(XmeanData) + c(-1,1)*1.96*sqrt(var(XmeanData)/nsim3)
+
+#Question 4
+nsim4 <- 10000
+X1 <- rchisq(nsim4, 10)
+X2 <- rgamma(nsim4, 1, 2)
+X3 <- rt(nsim4, 3)
+Y <- sqrt(X1)*X2+4*(X3)^2
+meanY <- mean(Y)
+
+#Question 5
+nsim5 <- 1000
+an <- function(n) {sqrt(2*log(n)) - 0.5*(log(log(n))+log(4*pi))*(2*log(n))^(-1/2)}
+bn <- function(n) {(2*log(n))^(-1/2)}
+fx <- function(x) {(exp(-x)*exp(-exp(-x)))}
+e <- rep(NA, nsim5)
+for(i in 1:nsim5){
+  e[i] <- (max(rnorm(nsim5))-an(nsim5))/bn(nsim5)
+}
+hist(e, freq = FALSE, ylim = c(0,0.4))
+curve(fx, density(e)$x, add = TRUE, col = "blue", ylim = c(0,0.4))
+curve(dnorm,add=TRUE,col = "red")
+
