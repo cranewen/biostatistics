@@ -2,11 +2,12 @@
 #(b)
 data1 <- c(1.636,0.374,0.534,3.015,0.932,0.179)
 #analytic
-lik <- function(lam) prod(lam*exp(-lam*data1))
-optim(par = 1, lik)$par
+nlik <- function(lam) -prod(lam*exp(-lam*data1))
+optim(par = 1, nlik)$par
 #numerical
-nloglikEXP <- function(lam) -(6*log(lam)-lam*sum(c(1.636,0.374,0.534,3.015,0.932,0.179)))
-optim(par = 1, nloglikEXP)$par
+#nloglikEXP <- function(lam) -(6*log(lam)-lam*sum(c(1.636,0.374,0.534,3.015,0.932,0.179)))
+nloglikEXP1 <- function(lam) -sum(log2(lam*exp(-lam*data1)))
+optim(par = 1, nloglikEXP1)$par
 
 
 #Question 2
@@ -105,6 +106,14 @@ quantile(data4mean, c(0.05,0.95))
 quantile(data4var, c(0.05,0.95))
 
 #(c)
-fx(10)
-mean(data4mean)+qt(c(0.05,0.95),49)*sqrt(mean(data4mean)/50)
-mean(data4var)*49/qchisq(c(0.95,0.05),49)
+#Using formula when lam=0.1
+0.1+qt(c(0.05,0.95),49)*sqrt(0.1/50)
+0.1*49/qchisq(c(0.95,0.05),49)
+
+#Using formula when lam=1
+1+qt(c(0.05,0.95),49)*sqrt(1/50)
+1*49/qchisq(c(0.95,0.05),49)
+
+#Using formula when lam=10
+10+qt(c(0.05,0.95),49)*sqrt(10/50)
+10*49/qchisq(c(0.95,0.05),49)

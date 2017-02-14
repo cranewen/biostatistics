@@ -1,0 +1,151 @@
+---
+title: "Module 5 Homework"
+author: "Yanhe Wen"
+date: "2/10/2017"
+output:
+  pdf_document: default
+  html_notebook: default
+  html_document: default
+---
+
+##Question 1
+###(a)
+MLE is listed: 
+
+\(l(\theta) = log\lambda^n-\lambda*\sum_{i=1}^nx{_i} \newline
+1/\lambda = (\sum_{i=1}^nx{-i})/n \newline
+\hat{\lambda} = 1/\bar X\)
+
+MoM is listed:
+
+For exponential distribution, we have population mean $1/\hat{\lambda}$ and sample mean $\bar X$, so $\hat{\lambda} = 1/\bar X$
+
+###(b)
+```{r warning=FALSE}
+data1 <- c(1.636,0.374,0.534,3.015,0.932,0.179)
+#analytic
+nlik <- function(lam) -prod(lam*exp(-lam*data1))
+cat("Analytic MLE is:",optim(par = 1, nlik)$par)
+#numerical
+nloglikEXP1 <- function(lam) -sum(log2(lam*exp(-lam*data1)))
+cat("Numerical MLE is:",optim(par = 1, nloglikEXP1)$par)
+```
+
+##Qustion 2
+###(a)
+$\hat{m} = \bar X\\$
+$\hat{m} = 100.8$
+
+###(b)
+```{r}
+m2 <- 100.8+qt(c(0.1), df = 53-1)*12.4/sqrt(53)
+```
+So one-sided 90% lower CI of m is: (`r m2`, $\infty$)
+
+##Question 3
+```{r}
+data(golub, package = "multtest")
+Zyxin.row <- grep("Zyxin",golub.gnames[,2])
+gol.fac <- factor(golub.cl, levels=0:1, labels = c("ALL","AML"))
+Zyxin.ALL <- golub[Zyxin.row, gol.fac=="ALL"]
+Zyxin.AML <- golub[Zyxin.row, gol.fac=="AML"]
+```
+###(a)
+```{r}
+nboot<-1000
+nALL <- length(Zyxin.ALL)
+nAML <- length(Zyxin.AML)
+boot.zyxinALLmean <- rep(NA, nboot)
+boot.zyxinALLvar <- rep(NA, nboot)
+boot.zyxinAMLmean <- rep(NA, nboot)
+boot.zyxinAMLvar <- rep(NA, nboot)
+for(i in 1:nboot){
+  data.starALL <- sample(Zyxin.ALL, replace = TRUE)
+  boot.zyxinALLmean[i] <- mean(data.starALL)
+  boot.zyxinALLvar[i] <- var(data.starALL)
+  data.starAML <- sample(Zyxin.AML, replace = TRUE)
+  boot.zyxinAMLmean[i] <- mean(data.starAML)
+  boot.zyxinAMLvar[i] <- var(data.starAML)
+}
+cat("Zyxin.All 95% CI mean is in between: ",quantile(boot.zyxinALLmean,c(0.025,0.975)))
+cat("Zyxin.All 95% CI variance is in between: ", quantile(boot.zyxinALLvar,c(0.025,0.975)))
+cat("Zyxin.AML 95% CI mean is in between: ", quantile(boot.zyxinAMLmean,c(0.025,0.975)))
+cat("Zyxin.AMl 95% CI variance is in between: ", quantile(boot.zyxinAMLvar,c(0.025,0.975)))
+```
+
+###(b)
+```{r}
+cat("Zyxin.All 95% CI mean is in between: ",mean(Zyxin.ALL)+qt(c(0.025,0.975),df=nALL-1)*sd(Zyxin.ALL)/sqrt(nALL))
+cat("Zyxin.All 95% CI variance is in between: ", sqrt(nALL-1)*sd(Zyxin.ALL)/sqrt(qchisq(c(0.975,0.025),df=nALL-1)))
+cat("Zyxin.AML 95% CI mean is in between: ", mean(Zyxin.AML)+qt(c(0.025,0.975),df=nAML-1)*sd(Zyxin.AML)/sqrt(nAML))
+cat("Zyxin.AMl 95% CI variance is in between: ", sqrt(nAML-1)*sd(Zyxin.AML)/sqrt(qchisq(c(0.975,0.025),df=nAML-1)))
+```
+
+###(c)
+```{r}
+boot.zyxinALLmedian <- rep(NA, nboot)
+boot.zyxinAMLmedian <- rep(NA, nboot)
+for(i in 1:nboot){
+  data.starALL <- sample(Zyxin.ALL, replace = TRUE)
+  boot.zyxinALLmedian[i] <- median(data.starALL)
+  data.starAML <- sample(Zyxin.AML, replace = TRUE)
+  boot.zyxinAMLmedian[i] <- median(data.starAML)
+}
+cat("Zyxin ALL 95% CI median is in between: ", quantile(boot.zyxinALLmedian, c(0.025,0.975)))
+cat("Zyxin AML 95% CI median is in between: ", quantile(boot.zyxinAMLmedian, c(0.025,0.975)))
+```
+
+###(d)
+Run code through (a) to (c). Yes, gene expressions in ALL and AML patients are different.
+
+##Question 4
+###(a)
+```{r}
+nsim <- 1000
+data4mean <- rep(NA, nsim)
+data4var <- rep(NA, nsim)
+fx <- function(lam){ 
+for(i in 1:nsim){
+  data <- rpois(50, lambda = lam)
+  data4mean[i] <<- mean(data)
+  data4var[i] <<- var(data)
+  }
+}
+```
+
+###(b)
+\textbf{When $\pmb{\lambda=0.1}$}
+```{r}
+fx(0.1)
+cat("90% CI for mean is in between: ", quantile(data4mean, c(0.05,0.95)))
+cat("90% CI for variance is in between: ", quantile(data4var, c(0.05,0.95)))
+```
+\textbf{When $\pmb{\lambda=1}$}
+```{r}
+fx(1)
+cat("90% CI for mean is in between: ", quantile(data4mean, c(0.05,0.95)))
+cat("90% CI for variance is in between: ", quantile(data4var, c(0.05,0.95)))
+```
+\textbf{When $\pmb{\lambda=10}$}
+```{r}
+fx(10)
+cat("90% CI for mean is in between: ", quantile(data4mean, c(0.05,0.95)))
+cat("90% CI for variance is in between: ", quantile(data4var, c(0.05,0.95)))
+```
+
+###(c)
+In order to validate which formula gives the result is closer to the true value, since in poisson distribution mean=lam, var=lam, so we can calculate 90% CI for mean and var by plugin lambda.
+```{r}
+#Using formula when lam=0.1
+cat("90% CI for mean is in between: ",0.1+qt(c(0.05,0.95),49)*sqrt(0.1/50))
+cat("90% CI for variance is in between: ",0.1*49/qchisq(c(0.95,0.05),49))
+
+#Using formula when lam=1
+cat("90% CI for mean is in between: ",1+qt(c(0.05,0.95),49)*sqrt(1/50))
+cat("90% CI for variance is in between: ",1*49/qchisq(c(0.95,0.05),49))
+
+#Using formula when lam=10
+cat("90% CI for mean is in between: ",10+qt(c(0.05,0.95),49)*sqrt(10/50))
+cat("90% CI for variance is in between: ",10*49/qchisq(c(0.95,0.05),49))
+```
+In comparison, the mean formula for 95% CI interval is closer to the simulation results, so we should use mean formula.
