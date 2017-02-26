@@ -1,0 +1,71 @@
+---
+title: "Module 7 Homework"
+author: "Yanhe Wen"
+output:
+  pdf_document: default
+  html_notebook: default
+data: 2/21/2017
+---
+
+##Question 1
+###(a)
+```{r warning=FALSE, message=FALSE}
+library(multtest)
+data("golub")
+gol.fac <- factor(golub.cl, levels=0:1, labels = c("ALL","AML"))
+p.values1 <- rep(NA, 3051)
+for(i in 1:3051){
+  p.values1[i] <- wilcox.test(golub[i,gol.fac=="ALL"],golub[i,gol.fac=="AML"], paired = F, 
+                              alternative = "greater")$p.value
+}
+p.fdr1 <- p.adjust(p=p.values1, method = "fdr")
+cat("There are: ",sum(p.fdr1<0.05),"genes are expressed higher in ALL group")
+```
+###(b)
+```{r}
+pIndex1 <- order(p.fdr1, decreasing = FALSE)
+for(i in 1:3){
+  cat(golub.gnames[pIndex1[i],2],"\n")
+}
+```
+
+##Questin 2
+```{r}
+p.values2 <- rep(NA, 3051)
+for(i in 1:3051){
+  p.values2[i] <- shapiro.test(golub[i,gol.fac=="AML"])$p.value
+}
+p.fdr2 <- p.adjust(p=p.values2, method = "fdr")
+cat(sum(p.fdr2<0.05)," genens do not pass the test at 0.05 level with FDR adjustment.")
+```
+
+##Question 3
+```{r}
+gene1.num <- grep("HOXA9 Homeo box A9", golub.gnames[,2])
+gene2.num <- grep("CD33", golub.gnames[,2])
+wilcox.test(golub[gene1.num,gol.fac=="ALL"],golub[gene2.num,gol.fac=="ALL"], paired = T, alternative = "two.sided")
+```
+Regarding to the result above, they do not express at the same level.
+
+##Question 4
+```{r}
+fisher.test(margin.table(UCBAdmissions,c(2,1)))
+```
+Reject null hypothesis of independence between the admission decision and gender
+
+##Question 5
+```{r}
+gol.cd33 <- golub[808,]
+n <- length(gol.cd33)
+T.obs <- abs(mean(gol.cd33[gol.fac=="ALL"])- mean(gol.cd33[gol.fac=="AML"]))
+n.perm <- 2000
+T.perm <- rep(NA, n.perm)
+for(i in 1:n.perm){
+  gol.cd33.perm <- sample(gol.cd33, n, replace = F)
+  T.perm[i] <- abs(mean(gol.cd33.perm[gol.fac=="ALL"]) - mean(gol.cd33.perm[gol.fac=="AML"]))
+}
+p.value5 <- mean(T.perm>=T.obs)
+cat("The p-value is: ", p.value5)
+```
+p value is 0, we reject null hypothesis, so the variance in ALL group is not
+small than the variance in AML group
