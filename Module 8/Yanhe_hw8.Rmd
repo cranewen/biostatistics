@@ -1,0 +1,102 @@
+---
+title: "Module 8 Homework"
+author: "Yanhe Wen"
+date: "3/12/2017"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+##Question 1
+###(a)
+```{r message=FALSE, warning=FALSE}
+library(ALL)
+data(ALL)
+library(lmtest)
+ALL_BB1234 <- ALL[,ALL$BT %in% c("B","B1","B2","B3","B4")]
+y_109at <- exprs(ALL_BB1234)["109_at",]
+anova(lm(y_109at~ALL_BB1234$BT))
+cat("p-value is less than 0.05, we reject null hypothesis, there is difference 
+    among different stages of patients, so the stages do affect the mean")
+```
+###(b)
+```{r}
+cat("B3 genen mean expression value is:", mean(exprs(ALL[,ALL$BT %in% c("B3")])["109_at",]))
+```
+###(c)
+```{r}
+pairwise.t.test(y_109at, ALL_BB1234$BT)
+cat("From the pairwise test, there is no difference between B and other groups!")
+```
+###(d)
+```{r}
+pairwise.t.test(y_109at, ALL_BB1234$BT, p.adjust.method = "fdr")
+cat("From the pairwise test with fdr, we still can't find difference 
+    between B and other groups!")
+```
+###(e)
+```{r}
+shapiro.test(residuals(lm(y_109at~ALL_BB1234$BT)))
+bptest(lm(y_109at~ALL_BB1234$BT))
+cat("Both diagnostics tests show the p-values are greater than 0.05, 
+    so we don't need to apply robust ANOVA tests")
+
+```
+
+##Question 2
+###(a)
+```{r}
+y_2 <- exprs(ALL_BB1234)
+p_values <- apply(y_2, 1, function(x) kruskal.test(x~ALL_BB1234$BT)$p.value)
+p_fdrs <- p.adjust(p_values, method = "fdr")
+cat("There are",sum(p_fdrs<0.05),"genes expressed differently.")
+```
+###(b)
+```{r}
+for(i in 1:5){
+cat(rownames(y_2)[order(p_fdrs, decreasing = FALSE)][i],"\n")
+}
+```
+
+##Question 3
+###(a)
+```{r}
+ALLBg <- ALL[,which(ALL$BT %in% c("B1","B2","B3","B4") & ALL$sex %in% c("M","F"))]
+y_3 <- exprs(ALLBg)["38555_at",]
+Bcell<-ALLBg$BT
+gender <- ALLBg$sex
+anova(lm(y_3~Bcell*gender))
+cat("B stages do affect the expression values, but gender doesn't affect, 
+    B stages and genders combined factors doesn't affect expression values either")
+anova(lm(y_3~Bcell+gender))
+cat("From the test result, we conclude the same as above.")
+summary(lm(y_3~Bcell+gender))
+cat("Here we can see that all the B stages are have extremely small p-values, 
+    but genders p-value is greater than 0.05. Therefore, we can agree the conclusion above.")
+```
+###(b)
+```{r}
+shapiro.test(residuals(lm(y_3~Bcell*gender)))
+bptest(lm(y_3~Bcell*gender))
+cat("Shapiro test and bptest show the p-values are identical, 
+    so we agree with the assumption from part a")
+```
+
+##Question 4
+```{r}
+ALLB123 <- ALL[,ALL$BT %in% c("B1","B2","B3")]
+y_4 <- exprs(ALLB123)["1242_at",]
+group <- ALLB123$BT[,drop=T]
+n <- length(y_4)
+#T.obs <- anova(lm(y_4~group))$F[1]
+T.obs <- max(by(y_4,group,mean)) - min(by(y_4,group,mean))
+n.perm <- 2000
+T.perm <- rep(NA, n.perm)
+for(i in 1:n.perm) {
+  y_4.perm = sample(y_4, n, replace=F) 
+  #T.perm[i] = anova(lm(y_4.perm~group))$F[1]
+  T.perm[i] = max(by(y_4.perm,group,mean))-min(by(y_4.perm,group,mean))
+}
+mean(T.perm>=T.obs)
+cat("p-value > 0.05, so there is no significant difference among 1242_at")
+```
