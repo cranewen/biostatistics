@@ -1,63 +1,93 @@
-#Question 1
-#(a)
+---
+title: "Midterm"
+author: "Yanhe Wen"
+date: "3/10/2017"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+##Question 1
+###(a)
+```{r}
 fx1 <- function(x){2.469862*x*exp(-x^2)}
 fy1 <- function(y){2*y*exp(-y^2)}
 x1 <- c(1,2,3)
 Ex1 <- sum(x1*fx1(x1))
+cat("E(X)=",Ex1)
 Ey1 <- integrate(function(y) y*fy1(y),lower = 0, upper = Inf)$value
+cat("E(Y)=",Ey1)
 Sdx1 <- sqrt(sum((x1-Ex1)^2*fx1(x1)))
+cat("sd(X)=",Sdx1)
 Sdy1 <- sqrt(integrate(function(y) (y-Ey1)^2*fy1(y) , lower = 0, upper = Inf)$value)
-#(b)
-#E(2X-3Y)
+cat("sd(Y)=",Sdy1)
+```
+##(b)
+```{r}
 E_xy <- sum(2*x1*fx1(x1)-3*Ey1)
+cat("E(2X-3Y)=",E_xy)
+```
 
-
-#Question 2
+##Question 2
+```{r}
 X <- rnorm(1000, mean = 0, sd = 1)
 Y <- rchisq(1000, df = 4)
-mean(X^2/(X^2+Y))
+cat("E(X^2/(X^2+Y))=",mean(X^2/(X^2+Y)))
+```
 
-
-#Question 3
+##Question 3
+```{r}
 nsim <- 1000
-#data3 <- rep(NA, nsim)
-cov95_1 <- cov95_2 <- cov94 <- cov92 <- rep(NA, nsim)
+cov1 <- cov2 <- rep(NA, nsim)
 for(i in 1:nsim){
   data3 <- rnorm(1000, mean = 0, sd = 1)
-  CI <- mean(data3)+c(qt(0.025,0.975),df=999)*sd(data3)/sqrt(1000)
-  cov95_1[i] <- CI[1]
-  cov95_2[i] <- CI[2]
+  CI <- c(mean(data3)+qt(0.03,999)*sd(data3)/sqrt(999), mean(data3)-qt(0.03,999)*sd(data3)/sqrt(999))
+  cov1[i] <- CI[1]
+  cov2[i] <- CI[2]
 }
-CI_95 <- c(mean(data3)+qt(0.025,999)*sd(data3)/sqrt(999), mean(data3)-qt(0.025,999)*sd(data3)/sqrt(999))
-CI_95_formula <- c(0+qt(0.025,999)*1/sqrt(999), 0 - qt(0.025,999)*1/sqrt(999))
+cat("94% CI is: (",mean(cov1),",",mean(cov2),")")
 
-#Question 4
+```
+
+##Question 4
+```{r}
 y <- as.numeric(t(read.table(file = "normalData.txt", header = T)))
 nloglik <- function(theta) -sum(log(dnorm(y, mean = theta, sd = theta)))
-optim(par = 1, nloglik)$par
+cat("MLE=",optim(par = 1, nloglik)$par)
+```
 
-#Question 5
+##Question 5
+```{r message=FALSE, warning=FALSE}
 library(multtest)
 data("golub")
-
-#(a)
+```
+###(a)
+```{r}
 p.value5 <- t.test(golub[201,], alternative = "greater", mu = 0.6, conf.level = 0.9)$p.value
 p.values <- apply(golub[1:3025,], 1, function(x) t.test(x, alternative = "greater", mu = 0.6, conf.level = 0.9)$p.value)
 p.fdrs <- p.adjust(p.values, method = "fdr")
-sum(p.fdrs<0.1)
-#(b)
+cat("There are",sum(p.fdrs>0.1),"genes have mean expression values greater than 0.6")
+```
+###(b)
+```{r}
 cat("Top five genes with mean expression values greater than 0.6: \n")
 for(i in 1:5){
   cat(golub.gnames[order(p.fdrs,decreasing = FALSE)[i],2],"\n")
 }
+```
 
-#Question 6
+##Question 6
+```{r}
 GRO3 <- golub[2715,]
 MYC <- golub[2302,]
 gol.fac <- factor(golub.cl, levels=0:1, labels = c("ALL","AML"))
-#(a)
+```
+###(a)
+```{r}
 hist(GRO3)
-#(b)
+```
+###(b)
+```{r}
 GRO3_ALL <- golub[2715,gol.fac=="ALL"]
 GRO3_AML <- golub[2715,gol.fac=="AML"]
 MYC_ALL <- golub[2302,gol.fac=="ALL"]
@@ -65,43 +95,55 @@ MYC_AML <- golub[2302,gol.fac=="AML"]
 plot(GRO3_ALL, MYC_ALL, col = "green", pch = "+", xlab = "GRO3", ylab = "MYC", ylim = range(-1.6,1.6), xlim = range(-2,1))
 points(GRO3_AML, MYC_AML, col = "blue")
 legend("topright", c("ALL","AML"), col = c("green","blue"), pch = c(3,1))
-#(c)
+```
+###(c)
+```{r}
 t.test(GRO3-MYC,alternative = "less")
-#From GRO3 - MYC, we get p vlaue is 0.03718, so accept null hypothesis, GRO3 < MYC
-#Here t.test(GRO3,MYC,alternative = "less", paired = TRUE) is equivalent to t.test(GRO3-MYC,alternative = "less")
-#(d)
+cat("From GRO3 - MYC, we get p-vlaue is 0.03718, so reject null hypothesis, GRO3 < MYC")
+```
+###(d)
+```{r}
 diff_GRO3_MYC <- GRO3 - MYC
 t_statistic <- (mean(diff_GRO3_MYC)-0)/(sd(diff_GRO3_MYC)/sqrt(37))
 pnorm(t_statistic)
-#matches the t-test
+cat("t statistic is",t_statistic, "pnorm(t_statistic)=",pnorm(t_statistic),"
+    which matches to the p-value as well")
+```
 
-#(e)
+###(e)
+```{r}
 wilcox.test(GRO3, MYC, paired = T, alternative = "less")
-#p-value is less than 0.05, so we reject null hypothesis, the median difference is less than 0
-
-#(f)
+cat("p-value is less than 0.05, so we reject null hypothesis, the median difference is less than 0")
+```
+###(f)
+```{r}
 binom.test(x=length(diff_GRO3_MYC)-sum(diff_GRO3_MYC==0), n = length(diff_GRO3_MYC), p = 0.5, alternative = "greater", conf.level = 0.95)
-#From the binom.test, we can see upper 95% CI starts with 0.7002587 to Inf.
+cat("95% CI is (0.5391389,1.0000000)")
+```
 
-#(g)
 
-
-#Question 7
-#(a)
+##Question 7
+###(a)
+```{r}
 HPCA_row <- grep("HPCA Hippocalcin", golub.gnames[,2])
 cat("The row number of HPCA Hippocalcin is: ", HPCA_row)
-#(b)
+```
+###(b)
+```{r}
 HPCA <- golub[HPCA_row,]
 HPCA_ALL <- golub[HPCA_row,gol.fac=="ALL"]
 HPCA_AML <- golub[HPCA_row,gol.fac=="AML"]
 cat("The proportion is:",sum(HPCA_ALL<0)/length(HPCA_ALL))
-#(c)
-#H0: 0.5 population of ALL patients's gene is negatively expressed; H1: >0.5 ...
+```
+###(c)
+```{r}
+cat("H0: 0.5 population of ALL patients's gene is negatively expressed; H1: >0.5")
 binom.test(sum(HPCA_ALL<0), n=27, p=0.5, alternative = "greater")
-#p-value = 0.221, so we accept null hypothesis
-#(d)
+cat("p-value = 0.221, so we accept null hypothesis, more than half of population of
+    genes are negtively expressed")
+```
+###(d)
+```{r}
 prop.test(x=c(sum(HPCA_ALL<0),sum(HPCA_AML<0)),n=c(27,11), alternative = "two.sided")
-
-
-
- 
+cat("95% CI is (-0.3477551,0.4420312)")
+```
