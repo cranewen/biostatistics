@@ -1,7 +1,18 @@
-#Question 1
-#(a)
+---
+title: "Module 11 Homework"
+author: "Yanhe Wen"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+##Question 1
+```{r message=FALSE, warning=FALSE}
 library(multtest)
 data("golub")
+```
+###(a)
+```{r}
 gol.fac <- factor(golub.cl, levels=0:1, labels = c("ALL","AML"))
 ccnd3 <- golub[grep("CCND3 Cyclin D3", golub.gnames[,2]),]
 clust.data1a <- data.frame(ccnd3)
@@ -11,13 +22,23 @@ plot(hc.single, labels=gol.fac)
 plot(hc.ward, labels=gol.fac)
 table(cutree(hc.single, k = 2), gol.fac)
 table(cutree(hc.ward, k = 2), gol.fac)
-#ward is better by looking at the plots
-#(b)
+cat("From the plots, we can tell that ward linkage is better.")
+```
+
+###(b)
+```{r}
 cl.2means1b <- kmeans(clust.data1a, centers = 2, nstart = 10)
 table(cl.2means1b$cluster, labels=gol.fac)
-#(c)
-#Same
-#(d)
+
+```
+
+###(c)
+From the table we can tell the outcome are the same, both of them have been 
+clustered into the right catagories. Therefore, kmeans and hierarchical are the same.
+
+
+###(d)
+```{r}
 initial <- cl.2means1b$centers
 n <- dim(clust.data1a)[1]
 nboot <- 2000
@@ -32,7 +53,11 @@ quantile(boot.cl[,1],c(0.025,0.975))
 quantile(boot.cl[,2],c(0.025,0.975))
 quantile(boot.cl[,3],c(0.025,0.975))
 quantile(boot.cl[,4],c(0.025,0.975))
-#(e)
+cat("There is no overlap.", quantile(boot.cl[,1],c(0.025,0.975)), "is more accurate.")
+```
+
+###(e)
+```{r}
 K <- c(1:30)
 sse <- rep(NA,length(K))
 for(k in K){
@@ -40,44 +65,44 @@ for(k in K){
 }
 plot(K, sse, type = 'o', xaxt = 'n')
 axis(1, at = K, las = 2)
-#From the plot, it suggests 4 clusters.
+cat("From the plot, it suggests 4 clusters.")
+```
 
-#Problem 2
-#(a)
-# oncogenes <- golub[grep("oncogene",golub.gnames[,2]),]
-# antigens <- golub[grep("antigen",golub.gnames[,2]),]
+##Question 2
+###(a)
+```{r}
 data2 <- golub[c(grep("oncogene",golub.gnames[,2]),grep("antigen",golub.gnames[,2])),]
-#(b)
+```
+###(b)
+```{r}
 library(cluster)
-#Using t(data frame object or matrix) to tranpose the matrix
 cl.2meansData2 <- kmeans(data2, centers = 2, nstart = 10)
 cl.2mediodsData2 <- pam(dist(data2, method = "euclidean"), k = 2)
-# cl.2meansOncogenes <- kmeans(t(oncogenes), centers = 2, nstart = 10)
-# cl.2meansAntigens <- kmeans(t(antigens), centers = 2, nstart = 10)
-# cl.2mediodsOncogenes <- pam(dist(t(oncogenes), method = "euclidean"), k = 2)
-# cl.2mediodsAntigens <- pam(dist(t(antigens), method = "euclidean"), k = 2)
-# table(gol.fac, cl.2meansOncogenes$cluster)
-# table(gol.fac, cl.2mediodsOncogenes$clustering)
-# table(gol.fac, cl.2meansAntigens$cluster)
-# table(gol.fac, cl.2mediodsAntigens$clustering)
 table(cl.2meansData2$cluster)
 table(cl.2mediodsData2$clustering)
-#(c)
+```
+###(c)
+```{r}
 oncogenes <- golub[grep("oncogene",golub.gnames[,2]),]
 antigens <- golub[grep("antigen",golub.gnames[,2]),]
-t.test(oncogenes, antigens)
+# t.test(oncogenes, antigens)
+```
+The 2 medoids method provides the more accurate clusters from the actual data.
 
-#(d)
+###(d)
+```{r}
 hc.single2 <- hclust(dist(data2, method = "euclidean"), method = "single")
 hc.ward2 <- hclust(dist(data2, method = "euclidean"), method = "complete")
 plot(hc.single2)
 plot(hc.ward2)
+```
 
-#Problem 3
+##Question 3
+###(a)
+```{r warning=FALSE}
 library(ISLR)
 ncidata <- NCI60$data
 ncilabs <- NCI60$labs
-#(a)
 K3 <- c(1:30)
 sse3 <- rep(NA,length(K3))
 for(k in K3){
@@ -85,7 +110,12 @@ for(k in K3){
 }
 plot(K3, sse3, type = 'o', xaxt = 'n')
 axis(1, at = K3, las = 2)
-# 1 cluster will do the work
-#(b)
+cat("It needs 1 cluster.")
+```
+###(b)
+```{r}
 cl.7medoids <- pam(as.dist(1-cor(t(ncidata))), k = 7)
 table(ncilabs,cl.7medoids$clustering)
+```
+From the table, we can tell that COLON and LEUKEMIA are well identified. NSCLC is the most
+similar one to ovarian.
