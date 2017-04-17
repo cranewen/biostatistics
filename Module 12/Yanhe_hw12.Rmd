@@ -1,0 +1,132 @@
+---
+title: "Module 12 Homework"
+author: "Yanhe Wen"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+##Question 1
+###(a)
+```{r warning=FALSE, message=FALSE}
+library(ALL)
+data(ALL)
+ALL.fac <- factor(ALL$BT, levels = c('B','B1','B2','B3','B4','T','T1','T2','T3','T4'), 
+                  labels = c(1,1,1,1,1,2,2,2,2,2))
+
+```
+###(b)
+```{r}
+par(mfrow = c(1,3))
+for(i in 1:3){
+  hist(exprs(ALL[i,]), xlab = colnames(ALL)[i], main = NULL)
+}
+```
+###(c)
+```{r}
+ALL1_5 <- exprs(ALL[1:5,])
+pairs(t(ALL1_5))
+```
+###(d)
+```{r}
+require(scatterplot3d)
+ALL_39317_at <- data.frame(exprs(ALL["39317_at",]))
+ALL_32649_at <- data.frame(exprs(ALL["32649_at",]))
+ALL_481_at <- data.frame(exprs(ALL["481_at",]))
+group <- rbind(ALL_32649_at,ALL_39317_at,ALL_481_at)
+scatterplot3d(t(group), color = ALL.fac)
+```
+###(e)
+```{r}
+cl.2means <- kmeans(t(group), centers = 2, nstart = 10)
+table(cl.2means$cluster)
+cl.3means <- kmeans(t(group), centers = 3, nstart = 10)
+table(cl.3means$cluster)
+cat("From the two tables above, we know the kmeans cluster isn't accurate here!")
+```
+###(f)
+```{r}
+ALL.data <- t(data.matrix(data.frame(ALL)[,1:nrow(ALL)]))
+pca <- prcomp(ALL.data, scale = TRUE)
+summary(pca)
+cat("First pc proportion is 0.9359, Second pc proportion is 0.00948")
+```
+
+###(g)
+```{r}
+biplot(prcomp(ALL.data, scale = TRUE))
+cat("The plot shows PC1 is horizontal related, because the red arrows indicate they are 
+    horizontal correlated, but spread in vertical way.")
+```
+
+###(h)
+```{r}
+cat("The biggest 3 PC2 value genes: ")
+print(sort(pca$x[,2], decreasing = TRUE)[1:3])
+cat("The smallest 3 PC2 value genes: ")
+print(sort(pca$x[,2], decreasing = FALSE)[1:3])
+```
+
+###(i)
+```{r warning=FALSE, message=FALSE}
+library(annotate)
+ALL.annotation <- annotation(ALL)
+library(hgu95av2.db)
+
+o.decreasing <- order(pca$x[,2], decreasing = TRUE)
+o.increasing <- order(pca$x[,2], decreasing = FALSE)
+cat("The biggest PC2 value gene name and chromosome:")
+mget(c(rownames(ALL[o.decreasing[1]])),hgu95av2GENENAME)
+mget(c(rownames(ALL[o.decreasing[1]])),hgu95av2CHRLOC)
+cat("The smallest PC2 value gene name and chromosome:")
+mget(c(rownames(ALL[o.increasing[1]])),hgu95av2GENENAME)
+mget(c(rownames(ALL[o.increasing[1]])),hgu95av2CHRLOC)
+```
+
+
+##Question 2
+###(a)
+```{r}
+data("iris")
+iris$Species <- NULL
+pca.2 <- prcomp(iris, scale = TRUE, center = TRUE)
+summary(pca.2)
+```
+###(b)
+```{r}
+eigen(cor(iris))
+prcomp(iris, scale = TRUE)
+cat("The two results show the same.")
+```
+###(c)
+```{r}
+dist(1-cor(pca.2$x))
+cat("The value of the factor is 1.414214")
+```
+###(d)
+```{r}
+summary(prcomp(pca.2$x, scale = FALSE)) #scaled
+summary(prcomp(iris, scale = FALSE)) #unscaled
+cat("They are different!")
+```
+###(e)
+```{r}
+cat("In scaled data, proportion of PC1 and PC2 are 0.7296 and 0.2285")
+cat("In scaled data, proportion of PC1 and PC2 are 0.9246 and 0.05307")
+```
+###(f)
+```{r}
+nboot <- 1000
+bootData <- pca.2$x
+p <- ncol(bootData)
+n <- nrow(bootData)
+sdevs <- array(dim = c(nboot, p))
+varsProp <- rep(NA, nboot)
+for(i in 1:nboot){
+  dat.star <- bootData[sample(1:n,replace = TRUE),]
+  sdevs[i,] <- prcomp(dat.star, scale = TRUE)$sdev
+  varsProp[i] <- sdevs[i,2]^2/sum(sdevs[i,1:p]^2)
+}
+cat("The 90% CI is: ")
+quantile(varsProp, c(0.05,0.95))
+```
