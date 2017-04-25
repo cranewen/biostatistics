@@ -46,10 +46,14 @@ sum(p_fdrs < 0.05)
 pairs(state.x77)
 #From the plot, Illiteracy and Murder variables have linear corraltion with it.
 #(b)
-lin.reg <- lm(state.x77[,4]~state.x77[,2]+state.x77[,3]+state.x77[,7])
+statex77.data <- as.data.frame(state.x77)
+lin.reg <- lm(statex77.data$`Life Exp`~statex77.data$Income+statex77.data$Illiteracy+statex77.data$Frost)
 summary(lin.reg)
 # y = 72 + 0.00018*Income - 1.56*Illiteracy - 0.006*Frost
 #(c)
+require(VGAM)
+statex77.lgr <- vglm()
+
 
 #Question 4
 library(ALL)
@@ -79,6 +83,16 @@ table(cutree(hc.ward, k = 4), ALLB$BT)
 
 #(e)
 library(gplots)
+#heatmap for B stages
+heatmap.2(as.matrix(sel_ALLB), 
+          hclustfun = function(d) hclust(dist(d, method = "euclidean"), method = "ward.D2"),
+          col=topo.colors(75))
+#heatmap for bio names
+sel_ALLB.biol <- sel_ALLB[, ALLB$mol.biol]
+heatmap.2(as.matrix(sel_ALLB.biol), 
+        hclustfun = function(d) hclust(dist(d, method = "euclidean"), method = "ward.D2"),
+        col=topo.colors(75))
+
 
 #(f)
 library(limma)
@@ -101,8 +115,38 @@ sum(p_fdrs_f<0.05)
 
 #(g)
 library(e1071)
-data_f <- exprs(ALLB[which(p_fdrs_f<0.05),])
+sel_ALLB1234 <- ALLB1234[which(p_fdrs_f<0.05),]
+data.svm <- data.frame(sel_ALLB1234, ALLB1234.factor)
+mcr.svm.M<-matrix(NA, nrow=dim(sel_ALLB1234)[1], ncol=dim(sel_ALLB1234)[2])
+for(i in 1:dim(sel_ALLB1234)[2]){
+  data.tmp<-data.svm[-i,]
+  p.t <-function(x) t.test(x~data.tmp$ALLB1234.factor)$p.value 
+  p.value<-apply(data.tmp[,1:dim(sel_ALLB1234)[1]], 2, p.t)
+  for(k in 1:dim(sel_ALLB1234)[1]){
+    topknames<-names(data.tmp[,1:dim(sel_ALLB1234)[1]]) 
+    topknames<-topknames[order(p.value)] 
+    topknames<-topknames[1:k] 
+    
+    fml<-as.formula(paste("y~",paste(topknames,collapse="+")))
+    svm.fit<-svm(fml, data=data.tmp, type = "C-classification", kernel = "linear") 
+    svm.pred<-predict(svm.fit,data.svm[i,]) 
+    mcr.svm.M[k,i]<- (svm.pred !=data.svm$ALLB1234.factor[i]) 
+  }
+}
+
+#(h)
+
+#Question 5
+#(a)
+my.dat <- read.table(file = "DataPoisReg.txt", header = TRUE)
+my.dat_x <- my.dat[,1]
+my.dat_y <- my.dat[,2]
+nloglik5 <- function(x) -sum(log2(dpois(my.dat_y, lambda = exp(x))))
+theta5 <- optim(par = 1, nloglik5)$par
+lm(my.dat_y~my.dat_x)
 
 
-
-
+#(b)
+lgr5 <- lm(dpois(my.dat_y, lambda = theta5)~my.dat_x)
+mean(predict(lgr5))
+# The slope is -0.5296, not 2.
