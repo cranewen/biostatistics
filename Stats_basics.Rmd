@@ -1,0 +1,50 @@
+---
+title: "Basic Stats"
+author: "Crane Wen"
+date: "12/27/2017"
+output: html_document
+---
+
+## Probability
+### Question 1
+X1, ..., X5 are independent random samples from a distribution with mean 5 and standard deviation 3.
+
+(a). For the sample mean $\bar X=\dfrac{1}{5}\sum_{k=1}^5X_i$, find its mean $E(\bar X)$ and standard deviation 
+$sd(\bar X)$.
+
+```{r}
+#Answer:
+# Making a 10000*5 matrix to simulate the data for X1, ..., X5 with rnorm()
+sim_data1 <- matrix(rnorm(10000*5, mean = 5, sd = 3), nrow = 10000)
+Ex1 <- mean(sim_data1)
+sd1 <- sd(sim_data1)
+cat("Mean is ", Ex1, " SD is ", sd1)
+```
+
+(b). Can you find the $P(2<\bar X<5.1)$ approximately? If yes, what is your
+estimate for $P(2<\bar X<5.1)$? If not,why not?
+
+```{r}
+#Answer:
+p1 <- pnorm(5.1, mean = 5, sd = 3) - pnorm(2, mean = 5, sd = 3)
+# Counting the numbers that fall into (2,5.1) range, calculate the percentage.
+count <- 0
+sim_data1_length <- length(sim_data1)
+for(i in 1:sim_data1_length){
+  if(sim_data1[i]>2 & sim_data1[i]<5.1){
+    count <- count + 1
+  }
+}
+p1b <- count / sim_data1_length
+
+cat("p1 = ",p1, "p1b = ",p1b, " so p1 and p1b are identical. We confirm that we can find the probability!")
+```
+
+### Question 2
+Suppose that for certain microRNA of size 20 the probability of a purine is binomially distributed with probability 0.7. Say there are 100 such microRNAs, each independent of the other. Let Y denote the average number of purine in these microRNAs. Find the probability that Y is great than 15.
+
+```{r}
+# Answer:
+
+```
+

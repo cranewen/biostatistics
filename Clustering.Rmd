@@ -1,0 +1,88 @@
+---
+title: "Clustering"
+output: html_document
+---
+
+### Question 1
+Clustering analysis on the "CCND3 Cyclin D3" gene expression values of the Golub et al. (1999) data.\
+(a) Conduct hierarchical clustering using single linkage and Ward linkage. Plot the cluster dendrogram for both fit. Get two clusters from each of the methods. Use function table() to compare the clusters with the two patient groups ALL/AML. Which linkage function seems to work better here?\
+(b)Use k-means cluster analysis to get two clusters. Use table() to compare the two clusters with the two patient groups ALL/AML.\
+(c) Which clustering approach (hierarchical versus k-means) produce the best matches to the two diagnose groups ALL/AML?\
+(d)Find the two cluster means from the k-means cluster analysis. Perform a bootstrap on the cluster means. Do the confidence intervals for the cluster means overlap? Which of these two cluster means is estimated more accurately?\
+(e) Produce a plot of K versus SSE, for K=1, ..., 30. How many clusters does this plot suggest?\
+
+```{r warning=FALSE, message=FALSE}
+library(multtest)
+data("golub")
+
+# (a)
+gol.fac <- factor(golub.cl, levels=0:1, labels = c("ALL","AML"))
+ccnd3 <- golub[grep("CCND3 Cyclin D3", golub.gnames[,2]),]
+clust.data1a <- data.frame(ccnd3)
+hc.single <- hclust(dist(clust.data1a, method = "euclidean"), method = "single")
+hc.ward <- hclust(dist(clust.data1a, method = "euclidean"), method = "ward.D2")
+plot(hc.single, labels=gol.fac)
+plot(hc.ward, labels=gol.fac)
+table(cutree(hc.single, k = 2), gol.fac)
+table(cutree(hc.ward, k = 2), gol.fac)
+cat("From the plots, we can tell that ward linkage is better.")
+
+
+# (b)
+cl.2means1b <- kmeans(clust.data1a, centers = 2, nstart = 10)
+table(cl.2means1b$cluster, labels=gol.fac)
+
+# (c)
+cat("From the table we can tell that the outcome are the same, both of them have been clustered into the right catagories. Therefore, kmeans and hierarchical are the same.")
+
+# (d)
+initial <- cl.2means1b$centers
+n <- dim(clust.data1a)[1]
+nboot <- 2000
+boot.cl <- matrix(NA, nrow = nboot, ncol = 4) # column 4 to store CI for each mean, here is 2 means
+for(i in 1:nboot){
+  dat.star <- clust.data1a[sample(1:n,replace=TRUE),]
+  cl <- kmeans(dat.star, initial, nstart = 10)
+  boot.cl[i,] <- c(cl$centers[1,], cl$centers[2,])
+}
+apply(boot.cl,2,mean)
+quantile(boot.cl[,1],c(0.025,0.975))
+quantile(boot.cl[,2],c(0.025,0.975))
+quantile(boot.cl[,3],c(0.025,0.975))
+quantile(boot.cl[,4],c(0.025,0.975))
+cat("There is no overlap.", quantile(boot.cl[,1],c(0.025,0.975)), "is more accurate.")
+
+# (e)
+K <- c(1:30)
+sse <- rep(NA,length(K))
+for(k in K){
+  sse[k] <- kmeans(clust.data1a, centers = k, nstart = 10)$tot.withinss
+}
+plot(K, sse, type = 'o', xaxt = 'n')
+axis(1, at = K, las = 2)
+cat("From the plot, it suggests 4 clusters.")
+```
+
+### Question 2
+We use the data set in package ISLR from r-project (Not Bioconductor). You can use the following commands to load the data set.\
+The ncidata (64 by 6830 matrix) contains 6830 gene expression measurements on 64 cancer cell lines. The cancer cell lines labels are contained in ncilabs. We do clustering analysis on the 64 cell lines (the rows).\
+(a) Using k-means clustering, produce a plot of K versus SSE, for K=1,..., 30. How many clusters appears to be there?\
+(b) Do K-medoids clustering (K=7) with 1-correlation as the dissimilarity measure on the data. Compare the clusters with the cell lines. Which types of cancer are well identified in a cluster? Which types of cancer are not grouped into a cluster? According to the clustering results, which types of cancer are most similar to ovarian cancer?\
+
+```{r warning=FALSE, message=FALSE}
+# (a)
+library(ISLR)
+ncidata <- NCI60$data
+ncilabs <- NCI60$labs
+K2 <- c(1:30)
+sse2 <- rep(NA,length(K2))
+for(k in K2){
+  sse2[k] <- kmeans(t(ncidata), centers = k, nstart = 10)$tot.withinss
+}
+plot(K2, sse2, type = 'o', xaxt = 'n')
+axis(1, at = K2, las = 2)
+cat("It needs 1 cluster.")
+# (b)
+cl.7medoids <- pam(as.dist(1-cor(t(ncidata))), k = 7)
+table(ncilabs,cl.7medoids$clustering)
+```

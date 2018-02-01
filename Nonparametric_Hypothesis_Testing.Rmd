@@ -1,0 +1,45 @@
+---
+title: "Nonparametric Hypothesis Testing"
+output: html_document
+---
+
+### Question 1
+For the Golub et al. (1999) data set, use appropriate Wilcoxon two-sample tests to find the genes whose mean expression values are higher in the ALL group than in the AML group.\
+(a) Use FDR adjustments at the 0.05 level. How many genes are expressed higher in the ALL group?\
+(b) Find the gene names for the top three genes with smallest p-values. Are they the same three genes with largest\ difference between the means in the ALL group and the AML group?\
+
+```{r warning=FALSE, message=FALSE}
+library(multtest)
+data("golub")
+# (a)
+gol.fac <- factor(golub.cl, levels=0:1, labels = c("ALL","AML"))
+nGene <- nrow(golub)
+p.values1 <- rep(NA, nGene)
+for(i in 1:nGene){
+  p.values1[i] <- wilcox.test(golub[i,gol.fac=="ALL"],golub[i,gol.fac=="AML"], paired = F, 
+                              alternative = "greater")$p.value
+}
+p.fdr1 <- p.adjust(p=p.values1, method = "fdr")
+cat("There are: ",sum(p.fdr1<0.05),"genes are expressed higher in ALL group")
+
+# (b)
+# pIndex1 <- order(p.fdr1, decreasing = FALSE)
+# for(i in 1:3){
+#   cat(golub.gnames[pIndex1[i],2],"\n")
+# }
+
+cat(paste0(golub.gnames[order(p.fdr1, decreasing = FALSE)[1:3],2], sep = "\n"))
+
+```
+
+### Question 2
+For the Golub et al. (1999) data set, apply the Shapiro-Wilk test of normality to every gene’s expression values in the AML group. How many genes do not pass the test at 0.05 level with FDR adjustment?
+
+```{r warning=FALSE, message=FALSE}
+p.values2 <- rep(NA, nGene)
+for(i in 1: nGene){
+  p.values2[i] <- shapiro.test(golub[i, gol.fac=="AML"])$p.value
+}
+p.fdr2 <- p.adjust(p=p.values2, method = "fdr")
+cat(sum(p.fdr2<0.05)," genens do not pass the test at 0.05 level with FDR adjustment.")
+```

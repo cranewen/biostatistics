@@ -1,0 +1,32 @@
+---
+title: "Statistical_Inference"
+output: html_document
+---
+
+### Question 1
+A random sample of size 6 from the exp(λ) 
+distribution results in observations: 1.636, 0.374, 0.534, 3.015, 0.932, 0.179. 
+Find the MLE on this data set in two ways: by numerical optimization of the likelihood and by the analytic formula.
+
+```{r warning=FALSE}
+data1 <- c(1.636,0.374,0.534,3.015,0.932,0.179)
+# Analytic
+nlik <- function(lam) -prod(lam*exp(-lam*data1))
+optim(par = 1, nlik)$par
+# Numerical 
+nloglikEXP1 <- function(lam) -sum(log2(lam*exp(-lam*data1)))
+optim(par = 1, nloglikEXP1)$par
+```
+
+### Question 2
+A random sample of $X{_1} , ..., X{_{53}} $, from the chi-square distribution with m degree 
+of freedom, has sample mean $\bar X = 100.8$ and sample standard deviation s = 12.4 \
+(a) Find the point estimator of m using the method of moments. \
+(b) Find a one-sided 90% lower confidence interval of m. \
+```{r warning=FALSE}
+#(a)
+m_a <- 100.8
+#(b)
+m_b <- 100.8+qt(c(0.1), df = 53-1)*12.4/sqrt(53)
+cat("One sided 90% lower CI of m is (", m_b, ", inf)")
+```

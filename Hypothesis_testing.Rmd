@@ -1,0 +1,96 @@
+---
+title: "Hypothesis Testing"
+output: html_document
+---
+
+### Question 1
+On the Golub et al. (1999) data, consider the “H4/j gene” gene (row 2972) and the “APS Prostate specific antigen” gene (row 2989). Setup the appropriate hypothesis for proving the following claims. Chose and carry out the appropriate tests.\
+(a) The mean “H4/j gene” gene expression value in the ALL group is greater than -0.9.\
+(b) The mean “H4/j gene” gene expression value in ALL group differs from the mean “H4/j gene” gene expression value in the AML group.\
+(c) In the ALL group, the mean expression value for the “H4/j gene” gene is lower than the mean expression value for the “APS Prostate specific antigen” gene.\
+(d) Let $p{_{low}}$ denote the proportion of patients for whom the “H4/j gene” expression is lower than the “APS Prostate specific antigen” expression. We wish to show that $p{_{low}}$ in the ALL group is greater than half. Does this test conclusion agree with the conclusion in part (c)?\
+(e) Let $p{_{H4j}}$ denotes the proportion of patients for whom the “H4/j gene” expression values is greater than -0.6. We wish to show that $p{_{H4j}}$ in the ALL group is less than 0.5.\
+(f) The proportion $p{_{H4j}}$ in the ALL group differs from the proportion $p{_{H4j}}$ in the AML group.\
+
+```{r warning=FALSE, message=FALSE}
+library(multtest)
+data("golub")
+gol.fac <- factor(golub.cl, levels=0:1, labels = c("ALL","AML"))
+dataH4j <- golub[2972,]
+dataAPS <- golub[2989,]
+dataH4j_ALL <- golub[2972, gol.fac=="ALL"]
+dataH4j_AML <- golub[2972, gol.fac=="AML"]
+dataAPS_ALL <- golub[2989, gol.fac=="ALL"]
+dataAPS_AML <- golub[2989, gol.fac=="AML"]
+```
+
+### (a) We state $H{_0}$: $\mu=-0.9$ and $H{_A}$: $\mu>-0.9$
+```{r warning=FALSE, message=FALSE}
+t.test(dataH4j_ALL, alternative = "greater", mu = -0.9)
+```
+### (b) We state $H{_0}$: $\mu{_{ALL}}=\mu{_{AML}}$ and $H{_A}$: $\mu{_{ALL}}\neq\mu{_{AML}}$
+```{r warning=FALSE, message=FALSE}
+t.test(dataH4j~gol.fac)
+```
+### (c) We state $H{_0}$: $\mu{_{H4j}}=\mu{_{APS}}$ and $H{_A}$: $\mu{_{H4j}}<\mu{_{APS}}$
+```{r warning=FALSE, message=FALSE}
+t.test(dataH4j_ALL, dataAPS_ALL, alternative = "less", mu = 0)
+```
+
+### (d) We state $H{_0}$: $p{_{low}}=1/2$ and $H{_A}$: $p{_{low}}>1/2$
+```{r warning=FALSE, message=FALSE}
+xd <- sum((dataH4j_ALL-dataAPS_ALL)<0)
+binom.test(x=xd,n=27,p=0.5,alternative = "greater")
+```
+
+### (e) We state $H{_0}$: $p{_{H4j}}=0.5$ and $H{_A}$: $p{_{H4j}}<0.5$
+```{r warning=FALSE, message=FALSE}
+xe <- sum(dataH4j_ALL>-0.6)
+binom.test(x=xe,n=27,p=0.5,alternative = "less")
+```
+
+### (f) We state $H{_0}$: $p{_{ALL}}=p{_{AML}}$ and $H{_A}$: $p{_{ALL}}\neq p{_{AML}}$
+```{r warning=FALSE, message=FALSE}
+x_all <- sum(dataH4j_ALL>-0.6)
+x_aml <- sum(dataH4j_AML>-0.6)
+prop.test(x=c(x_all,x_aml),n=c(27,11),alternative = "two.sided",correct = F)
+```
+
+### Question 2
+Suppose that the probability to reject a biological hypothesis by the results of a certain experiment is 0.05. This experiment is repeated 2000 times.\
+(a) How many rejections do you expect?\
+(b) What is the probability of less than 90 rejections?\
+
+```{r warning=FALSE, message=FALSE}
+#(a)
+ex_rejection <- 2000 * 0.05
+
+#(b) 
+pbinom(89, size = 2000, prob = 0.05)
+
+```
+
+### Question 3
+For testing $H{_0}:\mu=3\ versus\  H{_A}:\mu>3$, we considers a new α=0.1 level test which rejects when\
+$t{_{obs} = (\bar X - 3)/(s/\sqrt{n})}$ falls between $t{_{0.3,n-1}}$ and $t{_{0.4,n-1}}$.\
+(a) Use a Monte Carlo simulation to estimate the Type I error rate of this test\
+when n=20. Do 10,000 simulation runs of data sets from the $N(\mu=3, \sigma=4)$ . Please show the R script for the\ simulation, and the R outputs for running the script. Provide your numerical estimate for the Type I error rate. Is\ this test valid (that is, is its Type I error rate same as the nominal α=0.1 level)?\
+(b) Should we use this new test in practice? Why or why not?\
+
+```{r warning=FALSE, message=FALSE}
+#(a)
+nsim3 <- 10000
+p.value3 <- rep(NA, nsim3)
+p.bon3 <- rep(NA, nsim3)
+p.fdr3 <- rep(NA, nsim3)
+for(i in 1:nsim3){
+  data3 <- rnorm(20,3,4)
+  p.value3[i] <- t.test(data3, alternative = "greater", mu = 3, conf.level = 0.9)$p.value
+  p.bon3[i] <- p.adjust(p=p.value3[i], method = "bonferroni")
+  p.fdr3[i] <- p.adjust(p=p.value3[i], method = "fdr")
+}
+cat("The error rate is: ", errorRate3 <- sum(p.value3<0.1)/nsim3)
+
+#(b)
+cat("No, we shouldn't use this test. Because the error rate is too high.")
+```

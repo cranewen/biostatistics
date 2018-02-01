@@ -1,0 +1,98 @@
+---
+title: "Regression Analysis"
+output: html_document
+---
+
+### Question 1
+On the Golub et al. (1999) data set, find the expression values for the GRO2 GRO2 oncogene and the GRO3 GRO3 oncogene. 
+(a) Find the correlation between the expression values of these two genes.\
+(b)Find the parametric 90% confident interval for the correlation with cor.test(). \
+(c) Find the bootstrap 90% confident interval for the correlation.\
+(d)Test the null hypothesis that correlation = 0.64 against the one-sided alternative that correlation > 0.64 at the α = 0.05 level. What is your conclusion? Explain you reasoning supported by the appropriate R outputs.\
+
+```{r warning=FALSE, message=FALSE}
+library(multtest)
+data("golub")
+
+# (a)
+GRO2 <- golub[grep("GRO2 GRO2",golub.gnames[,2]),]
+GRO3 <- golub[grep("GRO3 GRO3",golub.gnames[,2]),]
+cat("The correlation is:",cor(GRO2,GRO3))
+
+# (b)
+cor.test(GRO2,GRO3, conf.level = 0.9)
+cat("The 90% CI is: (0.6702984, 0.8780861)")
+
+# (c)
+nboot1 <- 2000
+boot1.cor <- matrix(0, nrow = nboot1, ncol = 1)
+data1 <- cbind(GRO2,GRO3)
+for(i in 1:nboot1){
+  dat.star1 <- data1[sample(1:nrow(data1),replace = TRUE),]
+  boot1.cor[i,] <- cor(dat.star1[,1],dat.star1[,2])
+}
+cat("The bootstrap 90% CI:\n")
+quantile(boot1.cor[,1],c(0.05,0.95))
+
+# (d)
+cat("We can do the t-test from the bootstrap data, the t-test is showed below: \n")
+t.test(boot1.cor, mu = 0.64, alternative = "greater", conf.level = 0.95)
+cat("p.value is less than 2.2e-16, so we reject the null hypothesis, the correlations mean
+    is greater than 0.64")
+```
+
+### Question 2
+On the Golub et al. (1999) data set, we consider the correlation between the Zyxin gene expression values and each of the gene in the data set.\
+(a) How many of the genes have correlation values less than negative 0.5? (Those genes are highly negatively correlated with Zyxin gene).\
+(b)Find the gene names for the top five genes that are most negatively correlated with Zyxin gene.\
+(c) Using the t-test,how many genes are negatively correlated with the Zyxin gene? Use a false discovery rate of 0.05.\
+
+```{r warning=FALSE, message=FALSE}
+# (a)
+zyxin_rowNum <- grep("Zyxin",golub.gnames[,2])
+zyxin <- golub[zyxin_rowNum,]
+cor2 <- apply(golub,1,function(x) cor(x,zyxin))
+cat("There are",sum(cor2 < -0.5),"genes' corrlation values are less than -0.5")
+
+# (b)
+cat(paste0(golub.gnames[order(cor2, decreasing = FALSE)[1:5],2], "\n"))
+
+# (c)
+p_values2 <- apply(golub, 1, function(x) cor.test(x,zyxin,alternative = "less")$p.value)
+p_fdrs2 <- p.adjust(p_values2, method = "fdr")
+cat("Using the false discovery rae of 0.05, numbers of genes are listed below: \n")
+sum(p_fdrs2<0.05)
+
+```
+
+### Question 3
+On the Golub et al. (1999) data set, regress the expression values for the GRO3 GRO3 oncogene on the expression values of the GRO2 GRO2 oncogene.\
+(a) Is there a statistically significant linear relationship between the two genes’ expression? Use appropriate statistical analysis to make the conclusion. What proportion of the GRO3 GRO3 oncogene expression’s variation can be explained by the regression on GRO2 GRO2 oncogene expression?\
+(b)Test if the slope parameter is less than 0.5 at the α = 0.05 level.\
+(c) Find an 80% prediction interval for the GRO3 GRO3 oncogene expression
+when GRO2 GRO2 oncogene is not expressed (zero expression value).\
+(d)Check the regression model assumptions. Can we trust the statistical inferences from the regression fit?\
+
+```{r warning=FALSE, message=FALSE}
+# (a)
+reg3.fit <- lm(formula = GRO3~GRO2)
+summary(reg3.fit)
+cat("Yes, there is a significant relationship between the two genes. p.value is 2.20e-09, we 
+    reject null hypothesis")
+
+# (b)
+confint(reg3.fit, level = 0.95)
+cat("Yes, the slope is less than 0.5, since 95% CI is from 0.266 to 0.450")
+
+# (c)
+predict(reg3.fit, newdata = data.frame(GRO2=0), interval = "prediction", level = 0.8)
+cat("The 80% PI is: (-1.267563,-0.4175553)")
+
+#(d)
+qqnorm(resid(reg3.fit))
+qqline(resid(reg3.fit))
+shapiro.test(resid(reg3.fit))
+cat("From the plot and the results from shapiro test, we can tell the residuals are normally
+    distributed, plus the p.value is greater than 0.05, we accept the null hypothesis, which 
+    agrees with the normality")
+```

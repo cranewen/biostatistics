@@ -1,0 +1,63 @@
+---
+title: "ANOVA"
+output: html_document
+---
+
+### Question 1
+On the ALL data set, we consider the ANOVA on the gene with the probe “38555_at” expression values on two factors. The first factor is the disease stages: B1, B2, B3 and B4 (we only take patients from those four stages). The second factor is the gender of the patient (stored in the variable ALL$sex).\
+(a) Conduct the appropriate ANOVA analysis. Does any of the two factors affects the gene expression values? Are there interaction between the two factors?\
+(b)Check the ANOVA model assumption with diagnostic tests? Are any of the assumptions violated?\
+
+```{r warning=FALSE, message=FALSE}
+library(ALL)
+data(ALL)
+library(lmtest)
+
+# (a)
+ALLBg <- ALL[,which(ALL$BT %in% c("B1","B2","B3","B4") & ALL$sex %in% c("M","F"))]
+y_1 <- exprs(ALLBg)["38555_at",]
+Bcell<-ALLBg$BT
+gender <- ALLBg$sex
+anova(lm(y_1~Bcell*gender))
+cat("B stages do affect the expression values, but gender doesn't affect, 
+    B stages and genders combined factors doesn't affect expression values either")
+anova(lm(y_1~Bcell+gender))
+cat("From the test result, we conclude the same as above.")
+summary(lm(y_1~Bcell+gender))
+cat("Here we can see that all the B stages are have extremely small p-values, 
+    but genders p-value is greater than 0.05. Therefore, we can agree the conclusion above.")
+
+
+# (b)
+shapiro.test(residuals(lm(y_1~Bcell*gender)))
+bptest(lm(y_1~Bcell*gender))
+cat("Shapiro test and bptest show the p-values are identical, 
+    so we agree with the assumption from part a")
+```
+
+### Question 2
+We wish to conduct a permutation test for ANOVA on $(y{_1},...,y{_N})$,with the group\
+identifiers stored in the vector ‘group’. We wish to use $\dfrac{1}{(1-g)}\sum_{j=1}^g(\hat \mu{_j}-\hat \mu)^2$ as the test statistic. \
+Here $\hat \mu{_j}$ is the j-th group sample mean, and $\hat \mu=\dfrac{1}{g}\sum_{j=1}^g\hat \mu{_j}$ \
+(a) Program this permutation test in R.\
+(b) Run this permutation test on the Ets2 repressor gene 1242_at on the patients
+in stage B1, B2, and B3 from the ALL data set.
+
+```{r warning=FALSE, message=FALSE}
+ALLB123 <- ALL[,ALL$BT %in% c("B1","B2","B3")]
+y_2 <- exprs(ALLB123)["1242_at",]
+group <- ALLB123$BT[,drop=T]
+n <- length(y_2)
+group.means <- by(y_2, group, mean)
+n.group <- length(group.means)
+n.perm <- 2000
+T.obs <- (1/(n.group))*sum((group.means-mean(group.means))^2)
+T.perm <- rep(NA, n.perm)
+for(i in 1:n.perm){
+  y_2.perm = sample(y_2, n, replace=F) 
+  T.perm[i] <- (1/(n.group))*sum((group.means-mean(group.means))^2)
+}
+mean(T.perm>=T.obs)
+cat("p-value > 0.05, so there is no significant difference among 1242_at")
+
+```
